@@ -15,7 +15,8 @@ namespace Osmium\Services\TradeDownloads\Models;
  *   customer   company_name and contact_name of the logged-in customer (empty when not logged in)
  *   sections   list of {heading, path[], products[]}; a product has id, title, brandName, name, documents[] (type,
  *              label, url) and images[] (type, label, url)
- *   zipAction  the address that downloads a product's images as a ZIP; add ?id=<product id>
+ *   zipAction  the address a small form posts to (method post, hidden field id holding the product id) to download that
+ *              product's images as a ZIP; core accepts only same-origin POSTs on api routes
  */
 final class TradeDownloadsClaim
 {
