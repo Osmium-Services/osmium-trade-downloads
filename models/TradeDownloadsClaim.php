@@ -52,4 +52,17 @@ final class TradeDownloadsClaim
             'zipAction' => '/api/trade-download-images' . $slash,
         ]]];
     }
+
+    /**
+     * Answers `trade.documents.url`: the address to put a product id after to open that product's documents, for
+     * another service (the trade price list) to link to without knowing this service's page.
+     *
+     * @param array{osmium: object} $payload
+     */
+    public static function documentsUrl(array $payload): string
+    {
+        $slash = ($payload['osmium']->config->site->urlTrailingSlash ?? false) ? '/' : '';
+
+        return '/' . TradeDownloadsPages::URL . $slash . '?product=';
+    }
 }

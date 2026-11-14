@@ -21,3 +21,7 @@ The theme supplies `trade/views/downloads.phtml` with `$tradeDownloads`:
 - `zipAction`: where a small form posts (`method="post"`, a hidden field `id` with the product id) to download a product's images
 
 Sections follow the category sort order, with products that have no category in "Other" last; products are by title.
+
+## One product, and a link for other services
+
+Asking the page for one product (`/trade/downloads/?product=<id>`; core redirects the query string away and keeps it in the session, which the claim reads and clears) gives the view a `product` with its images and documents, or null when the shop has no such product. The theme draws it in the same `trade/views/downloads.phtml`. The `trade.documents.url` hook gives other services the address to put a product id after, so the trade price list can link to it without knowing this page.

@@ -20,6 +20,9 @@
     "page.claim": [
       "Osmium\\Services\\TradeDownloads\\Models\\TradeDownloadsClaim::page"
     ],
+    "trade.documents.url": [
+      "Osmium\\Services\\TradeDownloads\\Models\\TradeDownloadsClaim::documentsUrl"
+    ],
     "service.installed": [
       "Osmium\\Services\\TradeDownloads\\Models\\TradeDownloadsPages::onEnabled"
     ],
