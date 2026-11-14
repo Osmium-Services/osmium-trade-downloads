@@ -13,10 +13,15 @@ final class TradeDownloadsProduct
     /**
      * @param array<int, array<string, mixed>> $withFiles as shop.product.files gives them
      * @param array<int, array<string, mixed>> $all as shop.products.list gives them
-     * @return array{id: int, title: string, brandName: string, name: string, imageUrl: ?string, documents: array<int, array<string, mixed>>, images: array<int, array<string, mixed>>}|null null when the shop has no such product
+     * @return array{id: int, title: string, brandName: string, name: string, pageUrl: string, imageUrl: ?string, documents: array<int, array<string, mixed>>, images: array<int, array<string, mixed>>}|null null when the shop has no such product
      */
     public static function find(array $withFiles, array $all, int $id): ?array
     {
+        $pageUrl = '';
+        foreach ($all as $listed) {
+            if ((int) $listed['id'] === $id) $pageUrl = (string) ($listed['pageUrl'] ?? '');
+        }
+
         foreach ($withFiles as $product) {
             if ((int) $product['id'] !== $id) continue;
 
@@ -30,6 +35,7 @@ final class TradeDownloadsProduct
                 'title' => (string) $product['title'],
                 'brandName' => (string) $product['brandName'],
                 'name' => (string) $product['name'],
+                'pageUrl' => $pageUrl,
                 'imageUrl' => $main ?? ($product['images'][0]['url'] ?? null),
                 'documents' => $product['documents'],
                 'images' => $product['images'],
@@ -44,6 +50,7 @@ final class TradeDownloadsProduct
                 'title' => (string) $product['title'],
                 'brandName' => (string) $product['brandName'],
                 'name' => (string) $product['name'],
+                'pageUrl' => $pageUrl,
                 'imageUrl' => $product['image'] ?? null,
                 'documents' => [],
                 'images' => [],

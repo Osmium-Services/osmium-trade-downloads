@@ -13,8 +13,8 @@ namespace Osmium\Services\TradeDownloads\Models;
  *   loggedIn   bool; false means show a "please log in" message and link to loginUrl
  *   loginUrl   the Trade login page
  *   customer   company_name and contact_name of the logged-in customer (empty when not logged in)
- *   sections   list of {heading, path[], products[]}; a product has id, title, brandName, name, documents[] (type,
- *              label, url) and images[] (type, label, url)
+ *   sections   list of {heading, path[], products[]}; a product has id, title, brandName, name, imagePath (its picture, or
+ *              empty), documents[] (type, label, url) and images[] (type, label, url)
  *   product    set when the page is asked for one product (?product=<id>, which core stashes and redirects): that product's id, title, brandName, name,
  *              imageUrl, documents[] and images[], or null when the shop has no such product; absent otherwise
  *   downloadsUrl the page itself, for a link back from a product
@@ -34,7 +34,7 @@ final class TradeDownloadsClaim
         $customer = TradeDownloadsSource::customer($osmium);
         $loggedIn = $customer !== null;
 
-        $sections = $loggedIn ? TradeDownloadsGrouping::sections(TradeDownloadsSource::products($osmium)) : [];
+        $sections = $loggedIn ? self::withImages(self::sections($osmium), $osmium) : [];
 
         $extra = [];
         $productId = (int) $osmium->getStashedParam('product', 0); // Core redirects away a query string and keeps it in the session
@@ -51,6 +51,47 @@ final class TradeDownloadsClaim
             'sections' => $sections,
             'zipAction' => '/api/trade-download-images' . $slash,
         ]]];
+    }
+
+    /** Grouped as the trade price list is when Trade Ordering answers its layout, else by the shop's own category tree */
+    private static function sections(object $osmium): array
+    {
+        $withFiles = TradeDownloadsSource::products($osmium);
+        $layout = TradeDownloadsSource::categoryLayout($osmium);
+        if ($layout === []) return TradeDownloadsGrouping::sections($withFiles);
+
+        return TradeDownloadsGrouping::layoutSections($withFiles, TradeDownloadsSource::allProducts($osmium), $layout);
+    }
+
+    /**
+     * Gives each product its picture for the list: the best format the site has (AVIF, then WebP, then jpg) of the shop's
+     * medium image, when the shop gives its path, else the product's main image.
+     *
+     * @param array<int, array{heading: string, path: string[], products: array<int, array<string, mixed>>}> $sections
+     * @return array<int, array{heading: string, path: string[], products: array<int, array<string, mixed>>}>
+     */
+    private static function withImages(array $sections, object $osmium): array
+    {
+        $partials = [];
+        foreach (TradeDownloadsSource::allProducts($osmium) as $product) {
+            $partials[(int) $product['id']] = (string) ($product['imagePartial'] ?? '');
+        }
+
+        foreach ($sections as &$section) {
+            foreach ($section['products'] as &$product) {
+                $partial = $partials[(int) $product['id']] ?? '';
+                $best = $partial !== '' ? (string) $osmium->imagePath($partial) : '';
+                $main = '';
+                foreach ($product['images'] ?? [] as $image) {
+                    if (($image['type'] ?? '') === 'main') $main = (string) $image['url'];
+                }
+                $product['imagePath'] = $best !== '' ? $best : $main;
+            }
+            unset($product);
+        }
+        unset($section);
+
+        return $sections;
     }
 
     /**

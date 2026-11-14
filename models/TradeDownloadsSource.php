@@ -40,6 +40,14 @@ final class TradeDownloadsSource
         return \is_array($products) ? $products : [];
     }
 
+    /** @return array<int, array{id: int, name: string, path: string[], order: int[]}|false> category id => the section the trade price list shows it in, or false when hidden; empty when Trade Ordering is not installed */
+    public static function categoryLayout(object $osmium): array
+    {
+        $layout = self::hooks($osmium)->handle(event: 'trade.category.layout', payload: ['osmium' => $osmium]);
+
+        return \is_array($layout) ? $layout : [];
+    }
+
     private static function hooks(object $osmium): ServiceHooks
     {
         return new ServiceHooks(new ServiceLoader(new ServiceModel($osmium->dataSource)));

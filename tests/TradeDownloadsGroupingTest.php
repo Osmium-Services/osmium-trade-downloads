@@ -65,4 +65,40 @@ final class TradeDownloadsGroupingTest extends TestCase
         $this->assertCount(1, TradeDownloadsGrouping::sections([$this->product('A', $category), $this->product('B', $category)]));
         $this->assertSame([], TradeDownloadsGrouping::sections([]));
     }
+
+    public function test_layout_sections_list_a_product_under_each_category_ordered_by_brand_then_sort_then_name(): void
+    {
+        $rigid = $this->category(1, 'Rigid Panels', [1]);
+        $kits = $this->category(2, 'Rigid Roof Kits', [2]);
+        $files = [
+            ['id' => 10, 'title' => 'B', 'name' => 'Beta'],
+            ['id' => 11, 'title' => 'A', 'name' => 'Alpha'],
+            ['id' => 12, 'title' => 'C', 'name' => 'Gamma'],
+        ];
+        $all = [
+            ['id' => 10, 'brandId' => 1, 'categories' => [['id' => 1], ['id' => 2]], 'categorySorts' => [1 => 5, 2 => 1]],
+            ['id' => 11, 'brandId' => 1, 'categories' => [['id' => 1]], 'categorySorts' => [1 => 5]],
+            ['id' => 12, 'brandId' => 0, 'categories' => [['id' => 1]], 'categorySorts' => [1 => 9]],
+        ];
+
+        $sections = TradeDownloadsGrouping::layoutSections($files, $all, [1 => $rigid, 2 => $kits]);
+
+        $this->assertSame(['Rigid Panels', 'Rigid Roof Kits'], \array_column($sections, 'heading'));
+        $this->assertSame([12, 11, 10], \array_column($sections[0]['products'], 'id'));
+        $this->assertSame([10], \array_column($sections[1]['products'], 'id'));
+    }
+
+    public function test_layout_sections_drop_hidden_categories_and_fold_into_the_layouts_section(): void
+    {
+        $files = [['id' => 10, 'title' => 'A', 'name' => 'Alpha'], ['id' => 11, 'title' => 'B', 'name' => 'Beta']];
+        $all = [
+            ['id' => 10, 'brandId' => 1, 'categories' => [['id' => 7]], 'categorySorts' => []],
+            ['id' => 11, 'brandId' => 1, 'categories' => [['id' => 8]], 'categorySorts' => []],
+        ];
+
+        $sections = TradeDownloadsGrouping::layoutSections($files, $all, [7 => false, 8 => $this->category(3, 'Parent', [3])]);
+
+        $this->assertSame(['Parent'], \array_column($sections, 'heading'));
+        $this->assertSame([11], \array_column($sections[0]['products'], 'id'));
+    }
 }
