@@ -1,7 +1,7 @@
 {
   "id": "osmium-trade-downloads",
   "name": "Trade Downloads",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A page for logged-in trade customers listing the shop's product documents and images by category, with a one-click ZIP of a product's images. Needs Trade Accounts and the shop",
   "category": "business",
   "author": {
