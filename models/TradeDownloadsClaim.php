@@ -15,6 +15,9 @@ namespace Osmium\Services\TradeDownloads\Models;
  *   customer   company_name and contact_name of the logged-in customer (empty when not logged in)
  *   sections   list of {heading, path[], products[]}; a product has id, title, brandName, name, documents[] (type,
  *              label, url) and images[] (type, label, url)
+ *   product    set when the page is asked for one product (?product=<id>, which core stashes and redirects): that product's id, title, brandName, name,
+ *              imageUrl, documents[] and images[], or null when the shop has no such product; absent otherwise
+ *   downloadsUrl the page itself, for a link back from a product
  *   zipAction  the address a small form posts to (method post, hidden field id holding the product id) to download that
  *              product's images as a ZIP; core accepts only same-origin POSTs on api routes
  */
@@ -33,7 +36,15 @@ final class TradeDownloadsClaim
 
         $sections = $loggedIn ? TradeDownloadsGrouping::sections(TradeDownloadsSource::products($osmium)) : [];
 
-        return ['view' => 'trade/views/downloads.phtml', 'data' => ['tradeDownloads' => [
+        $extra = [];
+        $productId = (int) $osmium->getStashedParam('product', 0); // Core redirects away a query string and keeps it in the session
+        $osmium->clearStashedQuerystring();
+        if ($loggedIn && $productId > 0) {
+            $extra['product'] = TradeDownloadsProduct::find(TradeDownloadsSource::products($osmium), TradeDownloadsSource::allProducts($osmium), $productId);
+        }
+
+        return ['view' => 'trade/views/downloads.phtml', 'data' => ['tradeDownloads' => $extra + [
+            'downloadsUrl' => '/trade/downloads' . $slash,
             'loggedIn' => $loggedIn,
             'loginUrl' => '/trade/login' . $slash,
             'customer' => ['company_name' => (string) ($customer['company_name'] ?? ''), 'contact_name' => (string) ($customer['contact_name'] ?? '')],

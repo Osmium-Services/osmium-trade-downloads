@@ -31,6 +31,15 @@ final class TradeDownloadsSource
         return \is_array($products) ? $products : [];
     }
 
+    /** @return array<int, array<string, mixed>> every live product, as shop.products.list gives them */
+    public static function allProducts(object $osmium): array
+    {
+        $payload = ['dataSource' => $osmium->dataSource, 'osmium' => $osmium];
+        $products = self::hooks($osmium)->handle(event: 'shop.products.list', payload: $payload);
+
+        return \is_array($products) ? $products : [];
+    }
+
     private static function hooks(object $osmium): ServiceHooks
     {
         return new ServiceHooks(new ServiceLoader(new ServiceModel($osmium->dataSource)));
